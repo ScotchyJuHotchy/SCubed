@@ -1,0 +1,25 @@
+ SEARCH_DIR(/vex/gnu/decstation-ultrix/lib);
+ENTRY(__start)
+SECTIONS
+{
+  .text 0 : {
+     _ftext = . ;
+    *(.init)
+    *(.text)
+     etext  =  .;
+     _etext  =  .;
+  }
+  .data . : {
+    *(.rdata)
+    *(.data)
+    *(.sdata)
+    *(.scommon)
+  }
+  .bss . : {
+    *(.bss)
+    *(.sbss)
+    *(COMMON)
+  }
+   end = .;
+   _end = .;
+}
