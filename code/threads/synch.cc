@@ -134,7 +134,7 @@ void Lock::Acquire()
 		(void) interrupt->SetLevel(oldIntLevel);
 		
 		// Debug message
-		DEBUG('t', "Thread %s already has the lock. No need to acquire it again\n", name);
+		DEBUG('s', "%s : Thread already has the lock : %s. No need to acquire it again\n", currentThread->getName(), name);
 		return;
 	}
 	
@@ -148,7 +148,7 @@ void Lock::Acquire()
 		lockThread = currentThread;
 		
 		// Debug message
-		DEBUG('t', "Thread %s has acquired the lock.\n", name);
+		DEBUG('s', "%s : Thread has acquired the lock : %s.\n", currentThread->getName(), name);
 	} else	// If lock is not free & is owned by some other thread
 	{
 		// The calling thread has to wait for lock to get free
@@ -160,7 +160,7 @@ void Lock::Acquire()
 		currentThread->Sleep();
 		
 		// Debug Message
-		DEBUG('t', "Lock is not available. Thread %s is put on sleep.\n", name);
+		DEBUG('s', "%s : Lock is not available.  Due to this %s : Thread is put on sleep.\n", name, currentThread->getName());
 	}
 	
 	// Restore the interrupts after getting the lock
@@ -178,7 +178,7 @@ void Lock::Release()
 	// If some thread is trying to cheat then simple print an error message & return
 	if (!isHeldByCurrentThread())
 	{
-		DEBUG('e', "ERROR: Thread %s is not the owner of lock. Lock can't be released.\n", name);
+		printf("ERROR: %s : Thread is not the owner of lock. %s : Lock can't be released.\n", currentThread->getName(), name);
 		
 		// As no release has happend, restore the interrupts
 		(void) interrupt->SetLevel(oldIntLevel);
@@ -257,36 +257,35 @@ void Condition::Wait(Lock* conditionLock)
 		// This is the first waiter
 		// Save the lock pointer in the condition class
 		cvLock = conditionLock;
-	} else
-	{
-		// If someone is passing a Null simply return
-		if (conditionLock == NULL)
-		{
-			// Print a message & return
-			DEBUG('e', "NULL has been passed to thread->wait(). Invalid thread passed for waiting.\n");
-
-			// Restore the interrupts
-			(void) interrupt->SetLevel(oldIntLevel);
-
-			return;
-		}
-
-		// Release the lock & exit from the monitor
-		cvLock->Release();
-
-		// Put the present thread in the condition wait queue
-		cvWaitQueue->Append(currentThread);
-
-		// put the current thread on sleep
-		currentThread->Sleep();
-
-		// Re-acquire the lock when thread will be signalled to wake-up
-		// By re-acquiring the lock the thread is entering the monitor again
-		conditionLock->Acquire();
-
-		// Restore the interrupts & return
-		(void) interrupt->SetLevel(oldIntLevel);
 	}
+
+	// If someone is passing a Null simply return
+	if (conditionLock == NULL)
+	{
+		// Print a message & return
+		printf("NULL has been passed to thread->wait(). Invalid thread passed for waiting.\n");
+
+		// Restore the interrupts
+		(void) interrupt->SetLevel(oldIntLevel);
+
+		return;
+	}
+
+	// Release the lock & exit from the monitor
+	cvLock->Release();
+
+	// Put the present thread in the condition wait queue
+	cvWaitQueue->Append(currentThread);
+
+	// put the current thread on sleep
+	currentThread->Sleep();
+
+	// Re-acquire the lock when thread will be signalled to wake-up
+	// By re-acquiring the lock the thread is entering the monitor again
+	conditionLock->Acquire();
+
+	// Restore the interrupts & return
+	(void) interrupt->SetLevel(oldIntLevel);
 }
 
 // Function to implement signal functioanlaity to wake up any sleeping thread
@@ -303,7 +302,7 @@ void Condition::Signal(Lock* conditionLock)
 		(void) interrupt->SetLevel(oldIntLevel);
 
 		// Print a debug message
-		DEBUG('t', "Wait queue for the monitor is empty & nothing to wake-up by signalling.\n");
+		DEBUG('s', "Wait queue for the monitor is empty & nothing to wake-up by signalling.\n");
 
 		return;
 	}
@@ -314,7 +313,8 @@ void Condition::Signal(Lock* conditionLock)
 	if (!(cvLock == conditionLock))
 	{
 		// Print an error message as lock doesn't match & return
-		DEBUG('e', "ERROR: Lock for thread %s doesn't match with the calling thread.\n", name);
+		printf("ERROR LOCK MISMATCH: Signalled for lock : %s by thread : %s , while waiting for lock : %s\n", conditionLock->getName(), currentThread->getName(),cvLock->getName()); 
+//		printf("ERROR: Lock for thread %s doesn't match with the calling thread.\n", currentThread->getName());
 
 		// Restore interrupts
 		(void) interrupt->SetLevel(oldIntLevel);
