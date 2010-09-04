@@ -60,6 +60,8 @@ extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
+// Added by Shailendra
+extern void TestSuite(void);
 
 //----------------------------------------------------------------------
 // main
@@ -86,6 +88,8 @@ main(int argc, char **argv)
     
 #ifdef THREADS
     ThreadTest();
+	TestSuite ();
+	
 #endif
 
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {

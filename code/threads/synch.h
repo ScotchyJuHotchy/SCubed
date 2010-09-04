@@ -79,7 +79,17 @@ class Lock {
 
   private:
     char* name;				// for debugging
-    // plus some other stuff you'll need to define
+	
+	// Wait queue for threads who wants to acquire the lock but 
+	// due to unavailabity of lock they went to sleep state. The threads in 
+	// sleep state need to be waken up when lock will be released by other thread
+	// & it will be available to be qcquired.
+	List *waitQueue;
+	bool lockAvailable;		// Variable to keep track of availability of lock.
+	
+	// Thread pointer variable required to point to currentThread while acquiring & releasing the lock
+	Thread * lockThread;
+	
 };
 
 // The following class defines a "condition variable".  A condition
@@ -132,5 +142,14 @@ class Condition {
   private:
     char* name;
     // plus some other stuff you'll need to define
+
+	// Wait queue required for the threads which are waiting to acquire a lock & are in sleep state
+	// This is required as on wait command the thread will release the lock & we need to keep track
+	// of the same thread when it comes to signal it or waking up.
+	List *cvWaitQueue;
+
+	// Create a lock pointer to associate the condition variable with every lock.
+	// This will help us in distinguishing between the multiple condition variables exist for different locks.
+	Lock *cvLock; 
 };
 #endif // SYNCH_H
