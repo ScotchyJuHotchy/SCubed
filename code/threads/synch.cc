@@ -209,6 +209,10 @@ void Lock::Release()
 		// Clear the ownership of lock
 		lockThread = NULL;
 	}
+
+	// Restore the interrupts after releaseing the lock
+	// As we have to give CPU back to scheduler.
+	(void) interrupt->SetLevel(oldIntLevel);
 }	
 
 
