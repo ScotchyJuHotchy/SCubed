@@ -1,0 +1,34 @@
+// Cpp file for carls junior sim
+
+#include "copyright.h"
+#include "carlCustomer.h"
+
+
+
+carlCustomer::carlCustomer (char * debugName)
+{
+	name = debugName;
+	//for(int i=0; i<30; i++)
+	//customerState[i] = false;
+}
+
+carlCustomer::~carlCustomer()
+{
+}
+
+// Function to Acquire lock for every created customer thread
+void carlCustomer::customerLockAcquire(int customerNumber)
+{
+
+	DEBUG('u', "Lock acquired by customer for orderTaker : %d", customerNumber);
+
+	// Acquiring lock
+	lockNewCustomerLine[customerNumber]->Acquire();
+
+	// Customer has joined a line & waiting for a order taker to signal
+	// Change customer state to wait_order
+	//customerState[customerNumber] = false;
+}
+
+
+

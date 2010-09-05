@@ -1,0 +1,36 @@
+// Carls Junior Simulation for Customer
+
+#ifndef CARLCUSTOMER_H
+#define CARLCUSTOMER_H
+
+#include "stdio.h"
+#include "copyright.h"
+#include "thread.h"
+#include "switch.h"
+#include "synch.h"
+#include "system.h"
+#include "list.h"
+
+
+class carlCustomer
+{
+	public:
+		carlCustomer(char* debugName);
+
+		// Function to get the name of thread for debugging purpose
+		char* getName ();
+
+		// Function to implement customer functionality
+		void newCustomer (int customerNumber);
+
+		// Function to implement orderTaker functionality
+		void customerLockAcquire(int customerNumber);
+
+	private:
+		enum customerState {WAIT_ORDER, WAIT_FOOD};
+		char * name;
+		customerState custState;
+
+};
+
+#endif // CARLCUSTOMER_H
