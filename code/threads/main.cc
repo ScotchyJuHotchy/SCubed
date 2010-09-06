@@ -62,6 +62,7 @@ extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
 // Added by Shailendra
 extern void TestSuite(void);
+extern void carlsJuniorSim(void);
 
 //----------------------------------------------------------------------
 // main
@@ -88,7 +89,8 @@ main(int argc, char **argv)
     
 #ifdef THREADS
     ThreadTest();
-	TestSuite ();
+	//TestSuite ();
+	carlsJuniorSim();
 	
 #endif
 

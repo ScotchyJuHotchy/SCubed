@@ -134,7 +134,7 @@ void Lock::Acquire()
 		(void) interrupt->SetLevel(oldIntLevel);
 		
 		// Debug message
-		DEBUG('s', "%s : Thread already has the lock : %s. No need to acquire it again\n", currentThread->getName(), name);
+		DEBUG('u', "%s : Thread already has the lock : %s. No need to acquire it again\n", currentThread->getName(), name);
 		return;
 	}
 	
@@ -148,9 +148,12 @@ void Lock::Acquire()
 		lockThread = currentThread;
 		
 		// Debug message
-		DEBUG('s', "%s : Thread has acquired the lock : %s.\n", currentThread->getName(), name);
+		DEBUG('u', "%s : Thread has acquired the lock : %s.\n", currentThread->getName(), name);
 	} else	// If lock is not free & is owned by some other thread
 	{
+		// Debug Message
+		DEBUG('u', "%s : Lock is not available.  Due to this %s : Thread is put on sleep.\n", name, currentThread->getName());
+
 		// The calling thread has to wait for lock to get free
 		// This will be done by adding the thread to wait queue &
 		// making it to sleep. The lock should always be added to 
@@ -158,9 +161,6 @@ void Lock::Acquire()
 		// nothing & will not be waken up if not in waitqueue;
 		waitQueue -> Append((void *)currentThread);
 		currentThread->Sleep();
-		
-		// Debug Message
-		DEBUG('s', "%s : Lock is not available.  Due to this %s : Thread is put on sleep.\n", name, currentThread->getName());
 	}
 	
 	// Restore the interrupts after getting the lock
@@ -201,6 +201,10 @@ void Lock::Release()
 		
 		// Make this thread as the present owner
 		lockThread = releaseThread;
+
+		// Print a debug message
+		DEBUG('u', "%s : Thread was the first entry in Lock wait queue. Giving lock to it.\n", releaseThread->getName());
+
 	} else	// If no thread is waiting in wait queue, simple release the lock & make it available
 	{
 		// Make lock available
@@ -302,7 +306,7 @@ void Condition::Signal(Lock* conditionLock)
 		(void) interrupt->SetLevel(oldIntLevel);
 
 		// Print a debug message
-		DEBUG('s', "Wait queue for the monitor is empty & nothing to wake-up by signalling.\n");
+		DEBUG('u', "Wait queue for the monitor is empty & nothing to wake-up by signalling.\n");
 
 		return;
 	}
