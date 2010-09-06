@@ -12,6 +12,8 @@
 #ifndef CARLCUSTOMER_H
 #define CARLCUSTOMER_H
 
+
+
 class carlCustomer
 {
 	public:
@@ -24,9 +26,13 @@ class carlCustomer
 		// Function to implement orderTaker functionality
 		void customerLockAcquire(int customerNumber);
 
+		// Function which simulates order taking of a customer
+		void carlCustomer::customerFoodOrder(int customerNumber);
+		
 	private:
 		char * name;
-
+		int localLineLength;
+		
 };
 
 #endif // CARLCUSTOMER_H

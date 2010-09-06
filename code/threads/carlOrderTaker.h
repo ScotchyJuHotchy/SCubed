@@ -28,10 +28,11 @@ class carlOrderTaker
 
 	private:
 		char * name;
+	int locallineLength;
 	
 	public:
-		Lock *lockNewCustomerLine[5];  /// Can be added as define in global define
-		bool orderTakerReadyState[5];   /// Can be added as define in global define
+		//Lock *lockNewCustomerLine[5];  /// Can be added as define in global define
+		   /// Can be added as define in global define
 
 };
 
