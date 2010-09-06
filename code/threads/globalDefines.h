@@ -23,6 +23,7 @@ extern Condition *cvOrderTakerReadyStat[];
 // Condition variables to tell customer that order taker is ready 
 extern Condition *cvFoodNotReady[];
 
+extern Condition *cvInventoryFill[];
 extern int orderTakerStatus;
 extern bool customerState[30];   // Can be taken from global defines later on
 
@@ -30,3 +31,4 @@ extern bool customerState[30];   // Can be taken from global defines later on
 extern int lineLength;
 
 extern bool foodNotReady;
+extern int foodAvailable; 

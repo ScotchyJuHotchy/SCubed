@@ -7,11 +7,13 @@
 
 // Lock & Condition variable for ordertakers to deal with customers in Line
 Lock *lockNewCustomerLine[ORDERTAKERS];
+Lock *lockInventoryCheck[ORDERTAKERS];
 //Lock *lockFoodBagging[ORDERTAKERS];
 Condition *cvOrderTakerReadyStat[ORDERTAKERS];
 
 // Condition variable for food not ready
 Condition *cvFoodNotReady[ORDERTAKERS];
+Condition *cvInventoryFill[ORDERTAKERS];
 
 carlCustomer *customer=new carlCustomer("customer");
 carlOrderTaker *orderTaker=new carlOrderTaker("orderTaker");
@@ -20,6 +22,7 @@ carlOrderTaker *orderTaker=new carlOrderTaker("orderTaker");
 int lineLength;
 
 bool foodNotReady = false;
+int foodAvailable  = 3;
 
 // Function declaration for new customer
 void createCustomer (int customerNumber);
@@ -82,7 +85,7 @@ void createCustomer (int customerNumber)
 	// Keep track of no. of customer adding in line
 	//++(lineLength);
 
-	printf("length in main %d", lineLength);
+	printf("length in main %d\n", lineLength);
 }
 
 // Function to be called for creating Locks for simulating lines in front of order takers
@@ -98,8 +101,8 @@ void createOrderTakerLocks ()
 		lockNewCustomerLine[j]= new Lock(name);
 
 		// Creating food bagging locks
-		//sprintf(name,"foodBagger_%d",j);
-		//lockNewCustomerLine[j]= new Lock(name);
+		sprintf(name,"lockInventory_%d",j);
+		lockInventoryCheck[j]= new Lock(name);
 	}
 }
 
@@ -118,6 +121,10 @@ void createOrderTakerCV ()
 		// Initialization of food not ready CV
 		sprintf(name,"foodNotReadyCV_%d",j);
 		cvFoodNotReady[j]= new Condition(name);
+		
+		// Initialization of food not ready CV
+		sprintf(name,"foodNotReadyCV_%d",j);
+		cvInventoryFill[j]= new Condition(name);
 		
 	}
 }

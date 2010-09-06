@@ -33,7 +33,7 @@ void carlCustomer::customerLockAcquire(int customerNumber)
 	//customerState[customerNumber] = false;
 
 	// Wait for the order taker to signal
-	printf("OrderTakerReadyState : %d\n", orderTakerReadyState[customerNumber]);
+	//printf("OrderTakerReadyState : %d\n", orderTakerReadyState[customerNumber]);
 	//while (lineLength > 0)
 	//{
 	//for (int i=0; i<lineLength; i++)
@@ -44,35 +44,38 @@ void carlCustomer::customerLockAcquire(int customerNumber)
 		// Giver order
 		cvOrderTakerReadyStat[customerNumber]->Wait(lockNewCustomerLine[customerNumber]);
 		
+		lockNewCustomerLine[customerNumber]->Release();
+
 		// If food is already ready simply grab it & leave
 		if (foodNotReady)
 		{
-			printf("Food is not ready, waiting for it");
+
+			//******* Temporary signalling done. Need to be done by cook for inventory
+			// Acquire & release inventory lock
+			lockInventoryCheck[customerNumber]->Acquire();
+			cvInventoryFill[customerNumber]->Signal(lockInventoryCheck[customerNumber]);
+			lockInventoryCheck[customerNumber]->Release();
+
+
+
+			lockNewCustomerLine[customerNumber]->Acquire();
+			printf("Food is not ready, waiting for it\n");
 			cvFoodNotReady[customerNumber]->Wait(lockNewCustomerLine[customerNumber]);
+			lockNewCustomerLine[customerNumber]->Release();
 		} 
 
 		// Grab your food & leave
-		customerFoodOrder(customerNumber);
+		//customerFoodOrder(customerNumber);
+	}
 
-	//}
-	//}
-	//cvOrderTakerReadyStat[customerNumber]->Wait(lockNewCustomerLine[customerNumber]);
-
-	// Giver order
-	//customerFoodOrder(customerNumber);
-
-	// Once orderTaker signals, release your lock
-	lockNewCustomerLine[customerNumber]->Release();
-
-	
 }
 
 // Function which simulates order taking of a customer
 void carlCustomer::customerFoodOrder(int customerNumber)
 {
 	--lineLength;
+	//--foodAvailable;
+	printf(" FoodAvailable : %d\n", foodAvailable);
 	printf("Customer gave burger order to order taker no. %d\n", customerNumber);
 }
-
-
 
