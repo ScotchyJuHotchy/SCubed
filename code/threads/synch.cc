@@ -250,6 +250,18 @@ void Condition::Wait(Lock* conditionLock)
 	// Save the old interrupt status to be restored later while restoting the interrupt.
 	IntStatus oldIntLevel = interrupt->SetLevel(IntOff);
 
+	// If someone is passing a Null simply return
+	if (conditionLock == NULL)
+	{
+		// Print a message & return
+		printf("NULL has been passed to thread->wait(). Invalid thread passed for waiting.\n");
+
+		// Restore the interrupts
+		(void) interrupt->SetLevel(oldIntLevel);
+
+		return;
+	}
+
 	// We have to keep track of the locks being used with each condition variable
 	// as whenever a lock is released we have to identify the CV associated with a lock
 	// so that only locks related to this CV can acquire it.
@@ -263,20 +275,8 @@ void Condition::Wait(Lock* conditionLock)
 		cvLock = conditionLock;
 	}
 
-	// If someone is passing a Null simply return
-	if (conditionLock == NULL)
-	{
-		// Print a message & return
-		printf("NULL has been passed to thread->wait(). Invalid thread passed for waiting.\n");
-
-		// Restore the interrupts
-		(void) interrupt->SetLevel(oldIntLevel);
-
-		return;
-	}
-
 	// Release the lock & exit from the monitor
-	cvLock->Release();
+	conditionLock->Release();
 
 	// Put the present thread in the condition wait queue
 	cvWaitQueue->Append(currentThread);
@@ -318,7 +318,6 @@ void Condition::Signal(Lock* conditionLock)
 	{
 		// Print an error message as lock doesn't match & return
 		printf("ERROR LOCK MISMATCH: Signalled for lock : %s by thread : %s , while waiting for lock : %s\n", conditionLock->getName(), currentThread->getName(),cvLock->getName()); 
-//		printf("ERROR: Lock for thread %s doesn't match with the calling thread.\n", currentThread->getName());
 
 		// Restore interrupts
 		(void) interrupt->SetLevel(oldIntLevel);
