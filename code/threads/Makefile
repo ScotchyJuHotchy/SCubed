@@ -646,7 +646,63 @@ carlOrderTaker.o: ../threads/carlOrderTaker.cc ../threads/copyright.h ../threads
   /usr/include/v7/sys/psr.h /usr/include/sys/fsr.h ../threads/thread.h \
   ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
   ../threads/list.h ../machine/stats.h ../machine/timer.h \
-  ../threads/utility.h
+  ../threads/utility.h \
+
+
+carlCook.o: ../threads/carlCook.cc ../threads/copyright.h ../threads/carlCook.h \
+  ../threads/carlCook.h ../threads/system.h ../threads/utility.h ../threads/bool.h \
+  ../machine/sysdep.h ../threads/copyright.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/stdio.h \
+  /usr/include/stdarg.h /usr/include/iso/stdarg_iso.h \
+  /usr/include/sys/va_impl.h /usr/include/sys/va_list.h \
+  /usr/include/sys/isa_defs.h /usr/include/iso/stdarg_c99.h \
+  /usr/include/sys/feature_tests.h /usr/include/sys/ccompile.h \
+  /usr/include/iso/stdio_iso.h /usr/include/stdio_tag.h \
+  /usr/include/stdio_impl.h /usr/include/iso/stdio_c99.h \
+  /usr/include/string.h /usr/include/iso/string_iso.h \
+  /usr/include/stdlib.h /usr/include/iso/stdlib_iso.h \
+  /usr/include/iso/stdlib_c99.h /usr/include/sys/wait.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/sys/types.h \
+  /usr/include/sys/machtypes.h /usr/include/sys/int_types.h \
+  /usr/include/sys/select.h /usr/include/sys/time_impl.h \
+  /usr/include/sys/time.h /usr/include/time.h /usr/include/iso/time_iso.h \
+  /usr/include/sys/resource.h /usr/include/sys/siginfo.h \
+  /usr/include/sys/machsig.h /usr/include/sys/procset.h \
+  /usr/include/sys/signal.h /usr/include/sys/iso/signal_iso.h \
+  /usr/include/sys/unistd.h /usr/include/sys/ucontext.h \
+  /usr/include/sys/regset.h /usr/include/v7/sys/privregs.h \
+  /usr/include/v7/sys/psr.h /usr/include/sys/fsr.h ../threads/thread.h \
+  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
+  ../threads/list.h ../machine/stats.h ../machine/timer.h \
+  ../threads/utility.h \
+
+carlManager.o: ../threads/carlManager.cc ../threads/copyright.h ../threads/carlManager.h \
+  ../threads/carlCook.h ../threads/system.h ../threads/utility.h ../threads/bool.h \
+  ../machine/sysdep.h ../threads/copyright.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/stdio.h \
+  /usr/include/stdarg.h /usr/include/iso/stdarg_iso.h \
+  /usr/include/sys/va_impl.h /usr/include/sys/va_list.h \
+  /usr/include/sys/isa_defs.h /usr/include/iso/stdarg_c99.h \
+  /usr/include/sys/feature_tests.h /usr/include/sys/ccompile.h \
+  /usr/include/iso/stdio_iso.h /usr/include/stdio_tag.h \
+  /usr/include/stdio_impl.h /usr/include/iso/stdio_c99.h \
+  /usr/include/string.h /usr/include/iso/string_iso.h \
+  /usr/include/stdlib.h /usr/include/iso/stdlib_iso.h \
+  /usr/include/iso/stdlib_c99.h /usr/include/sys/wait.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/sys/types.h \
+  /usr/include/sys/machtypes.h /usr/include/sys/int_types.h \
+  /usr/include/sys/select.h /usr/include/sys/time_impl.h \
+  /usr/include/sys/time.h /usr/include/time.h /usr/include/iso/time_iso.h \
+  /usr/include/sys/resource.h /usr/include/sys/siginfo.h \
+  /usr/include/sys/machsig.h /usr/include/sys/procset.h \
+  /usr/include/sys/signal.h /usr/include/sys/iso/signal_iso.h \
+  /usr/include/sys/unistd.h /usr/include/sys/ucontext.h \
+  /usr/include/sys/regset.h /usr/include/v7/sys/privregs.h \
+  /usr/include/v7/sys/psr.h /usr/include/sys/fsr.h ../threads/thread.h \
+  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
+  ../threads/list.h ../machine/stats.h ../machine/timer.h \
+  ../threads/utility.h \
+
 # DEPENDENCIES MUST END AT END OF FILE
 # IF YOU PUT STUFF HERE IT WILL GO AWAY
 # see make depend above
