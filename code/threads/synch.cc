@@ -161,11 +161,6 @@ void Lock::Acquire()
 		// nothing & will not be waken up if not in waitqueue;
 		waitQueue -> Append((void *)currentThread);
 		currentThread->Sleep();
-		
-		
-		/////
-		//Scott---- is the thread supposed restore interrupts first?
-		/////
 	}
 	
 	// Restore the interrupts after getting the lock
