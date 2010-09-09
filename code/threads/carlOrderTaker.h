@@ -22,9 +22,9 @@ class carlOrderTaker
 		char* getName ();
 
 		// Function to implement orderTaker functionality
-		void carlOrderTakerLockAcquire(int orderTakerNumber);
+		void carlOrderTakerLockAcquire();
 
-		void orderTakerReady(int orderTakerNumber);
+		void orderTakerReady();
 
 	private:
 		char * name;

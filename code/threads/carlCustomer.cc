@@ -18,64 +18,88 @@ carlCustomer::~carlCustomer()
 }
 
 // Function to Acquire lock for every created customer thread
-void carlCustomer::customerLockAcquire(int customerNumber)
+void carlCustomer::customerLockAcquire()
 {
 
-	DEBUG('u', "Lock acquired by customer for orderTaker : %d\n", customerNumber);
+	DEBUG('u', "Lock acquired by customer for orderTaker : OrderNo.-%d : Customer- %d \n", orderTakerNumber, customerNumber);
 
+	// Check if linelength is not zero
 	// Acquiring lock
-	lockNewCustomerLine[customerNumber]->Acquire();
-	
+	lockNewCustomerLine[orderTakerNumber]->Acquire();
 
+	// Check if there is any line or not
+	if ((orderTakerLineLength[orderTakerNumber] >= 0) && (orderTakerReadyState[orderTakerNumber] = true))
+	{		
+		// Increase the lineLength as customer is added in line
+		//++lineLength;
+		++orderTakerLineLength[orderTakerNumber];
 
-	// Customer has joined a line & waiting for a order taker to signal
-	// Change customer state to wait_order
-	//customerState[customerNumber] = false;
-
-	// Wait for the order taker to signal
-	//printf("OrderTakerReadyState : %d\n", orderTakerReadyState[customerNumber]);
-	//while (lineLength > 0)
-	//{
-	//for (int i=0; i<lineLength; i++)
-	//{
-	if(!orderTakerReadyState[customerNumber])
-	{
-		printf(" Customer waiting for ordertaker\n");
-		// Giver order
-		cvOrderTakerReadyStat[customerNumber]->Wait(lockNewCustomerLine[customerNumber]);
+		// Wait for the ordertakers signal
+		printf(" Customer number waiting for ordertaker: OrderNo.-%d : Customer- %d \n", orderTakerNumber, customerNumber);
 		
-		lockNewCustomerLine[customerNumber]->Release();
+		// Order Taker signalled 
+		cvOrderTakerReady[orderTakerNumber]->Wait(lockNewCustomerLine[orderTakerNumber]);
+		
+		// decrease the lineLength as customer is out of line now
+		//--lineLength;
+		--orderTakerLineLength[orderTakerNumber];
 
-		// If food is already ready simply grab it & leave
-		if (foodNotReady)
+		// Acquire the lock for order
+		lockCustomerOrder[customerNumber]->Acquire();
+
+		// Release your lock for line
+		lockNewCustomerLine[orderTakerNumber]->Release();
+
+		// Customer ordered
+		printf("Customer no. ordered cold drink: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+ 
+		// Customer Ordered the food
+		orderGiven = true;
+
+		// Signal the order taker that order is given
+		cvCustomerOrdered[customerNumber]->Signal(lockCustomerOrder[customerNumber]);
+
+		// Acquire orderPickUp/Serivice lock
+		lockCustomerServe[customerNumber]->Acquire();
+
+		// Release Customer order lock
+		lockCustomerOrder[customerNumber]->Release();
+
+		// Check if order has not come
+		if (!orderReady)
 		{
+			// wait if order has not come
+			printf("Customer waiting for order to get served: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+			cvOrderReady[customerNumber]->Wait(lockCustomerServe[customerNumber]);
 
-			//******* Temporary signalling done. Need to be done by cook for inventory
-			// Acquire & release inventory lock
-			lockInventoryCheck[customerNumber]->Acquire();
-			cvInventoryFill[customerNumber]->Signal(lockInventoryCheck[customerNumber]);
-			lockInventoryCheck[customerNumber]->Release();
+			orderReady = false;
 
-
-
-			lockNewCustomerLine[customerNumber]->Acquire();
-			printf("Food is not ready, waiting for it\n");
-			cvFoodNotReady[customerNumber]->Wait(lockNewCustomerLine[customerNumber]);
-			lockNewCustomerLine[customerNumber]->Release();
 		} 
 
+		// Acquire Customer order bagged lock
+		lockCustomerOrderBagged[customerNumber]->Acquire();
+
+		// Release the customer serve order
+		lockCustomerServe[customerNumber]->Release();
+		
+		// Pick up your food & signal ordertaker that food is picked & leave
+		// Signal the order taker that order is picked
+		foodPicked = true;
+		cvOrderPicked[customerNumber]->Signal(lockCustomerOrderBagged[customerNumber]);
+		printf("Customer has signalled that food is bagged: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+
+		lockCustomerOrderBagged[customerNumber]->Release();
 		// Grab your food & leave
-		//customerFoodOrder(customerNumber);
+		customerFoodOrder();
 	}
 
 }
 
+
 // Function which simulates order taking of a customer
-void carlCustomer::customerFoodOrder(int customerNumber)
+void carlCustomer::customerFoodOrder()
 {
-	--lineLength;
 	//--foodAvailable;
-	printf(" FoodAvailable : %d\n", foodAvailable);
-	printf("Customer gave burger order to order taker no. %d\n", customerNumber);
+	printf("Customer number got his food: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
 }
 

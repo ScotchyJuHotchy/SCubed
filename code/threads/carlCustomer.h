@@ -24,10 +24,10 @@ class carlCustomer
 		char* getName ();
 
 		// Function to implement orderTaker functionality
-		void customerLockAcquire(int customerNumber);
+		void customerLockAcquire();
 
 		// Function which simulates order taking of a customer
-		void carlCustomer::customerFoodOrder(int customerNumber);
+		void carlCustomer::customerFoodOrder();
 		
 	private:
 		char * name;
