@@ -25,15 +25,17 @@ carlOrderTaker *orderTaker=new carlOrderTaker("orderTaker");
 int queuedFood[5];
 int storedFood[5];
 int cookedFood[5];
-
-
+char* foodStrings[5] = {"6 Dollar Burger","3 Dollar Burger","Veggie Burger","French Fries","Soda"}
+bool orderedFood = false;
 Lock lockQueuedFood("queuedFood");
 Lock lockCookedFood("cookedFood");
 Lock lockStoredFood("storedFood");
 Condition cvCookBreak("cookBreak");
 Lock lockCookBreak("lockCookBreak");
 
-carlCook* mCooks[COOKS];
+
+//I need to not hard code this -Scott
+carlCook* mCooks[10];
 
 int cookNumber = 0; //used to give cooks their number
 
@@ -109,9 +111,8 @@ void carlsJuniorSim ()
 	//Create some cooks	
 	for(int i=0;i<COOKS;i++)
 	{
-		
 			name = new char[25];
-			sprintf(name,"newCook_%d",i);
+			sprintf(name,"Cook_%d",i);
 			mCooks[i] = new carlCook(name);
 	}
 	
@@ -136,9 +137,8 @@ void printCookedFood()
 {
 	lockCookedFood.Acquire();
 	for(int i = 0;i < 4; i++)
-		printf("In food number %d amount of cooked food is %d\n",i,cookedFood[i]);
-		
-		lockCookedFood.Release();
+		printf("In food number %d amount of cooked food is %d\n",i,cookedFood[i]);	
+	lockCookedFood.Release();
 }
 
 void printStoredFood()
@@ -146,7 +146,6 @@ void printStoredFood()
 	lockStoredFood.Acquire();
 	for(int i = 0;i < 4; i++)
 		printf("In food number %d amount of stored food is %d\n",i,storedFood[i]);
-		
 	lockStoredFood.Release();
 }
 
@@ -160,15 +159,66 @@ int getOnBreakCook()
 	cvCookBreak.Signal(&lockCookBreak);
 	lockCookBreak.Release();
 	currentThread->Yield();
-	
-	for(int i =0; i < COOKS;i++)
+	while(1)
 	{
-		if(mCooks[i]->onBreak == true && mCooks[i]->cookType == 9)
+		for(int i =0; i < COOKS;i++)
 		{
-			return i;
+		
+			if(mCooks[i]->onBreak == true && mCooks[i]->cookType == 9)
+			{
+				printf("Manager informs %s to cook %s", mCooks[i]->name,foodStrings[mCooks[i]->cookType]);
+				return i;
+			}
 		}
 	}
-	
+	return -1;
+}
+
+void checkFood(int quantity)
+{
+	//Checks if food is already ordered if its not then check quantities. If something is under 5, order 15 to all.
+	lockFoodStored->Acquire();
+	if(!orderedFood)
+	{
+		for(int i = 0; i < 5;i++)
+		{
+			if(foodStored[i] < 5)
+			{
+				//Check money
+				
+				//****Implement!****
+				
+				//Send shipment off
+				printf("The manager sent a shipment off\n");
+				name = new char[25];
+				sprintf(name,"",i);
+				Thread *newOrderThread = new Thread(name);
+				newOrderThread->Fork((VoidFunctionPtr)orderFoodThread, 0);
+				orderedFood = true;
+				
+			}
+		}
+		lockFoodStored->Release();
+		
+	}
+}
+
+void orderFoodThread()
+{
+	//Takes 5 times the amount of something to cook
+	for(int i = 0; i < 25;i++)
+		currentThread->Yield();
+		
+		
+	//When a shipment comes in.
+	lockFoodStored->Acquire();
+	for(int i = 0; i< 5;i++)
+	{
+		foodStored[i] += 15;
+	}
+	printf("The shipment came in!\n");
+	orderedFood = false;
+	lockFoodStored->Release();
 }
 
 //This is the manager thread
@@ -179,38 +229,43 @@ void carlManagerThread()
 	
 	for(int i=0;i < 5;i++)
 	{
-		
-		printCookedFood();
-		printStoredFood();
+	
 		
 		
 		//get a cook and give him a job
 		cookOnBreak = getOnBreakCook();
 		mCooks[cookOnBreak]->goWork(i);
+		
 		for(int j = 0; j< 5;j++)
 		{
 			currentThread->Yield();
 		}	
 			
-			//this is testing out the functionality to put a cook on break
-			lockCookedFood.Acquire();
-			if(cookedFood[0] > 5 && mCooks[0]->onBreak == false)
-			{
-				mCooks[0]->goBreak();
-			}
-		
-			lockCookedFood.Release();
+		//this is testing out the functionality to put a cook on break
+		lockCookedFood.Acquire();
+		if(cookedFood[0] > 5 && mCooks[0]->onBreak == false)
+		{
+			mCooks[0]->goBreak();
+		}
+	
+		lockCookedFood.Release();
 	
 			
 	}
+
+	//Checks if food needs to be ordered.
+	checkFood();
 	
-	storedFood[0] += 15;
-		cookOnBreak = getOnBreakCook();
-		mCooks[cookOnBreak]->goWork(0);
 	
+	//puts the cook back to work who was put on break
+	cookOnBreak = getOnBreakCook();
+	mCooks[cookOnBreak]->goWork(0);
+	
+	//Yields for the simulation
 	for(int j = 0; j< 150;j++)
 		currentThread->Yield();
-		
+	
+	//prints results.	
 	printStoredFood();
 	printCookedFood();
 		
@@ -249,6 +304,8 @@ void carlCookThread()
 			{
 				currentThread->Yield();
 			}
+			
+			printf("%s is going to cook %s\n",mcarlCook->name,foodStrings[mcarlCook->cookType]);
 		}
 		
 		//List of each types of food to be made
