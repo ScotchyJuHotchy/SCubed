@@ -11,12 +11,17 @@
 #ifndef CARLMANAGER_H
 #define CARLMANAGER_H
 
+
+extern carlCook* mCooks[];
+
 class carlManager
 {
 	
 public:
 	char* name;
 	carlManager(char* debugName);
+	int getOnBreakCook(int foodType);
+	void checkFood();
 private:
 	
 	

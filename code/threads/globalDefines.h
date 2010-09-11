@@ -1,3 +1,8 @@
+
+#ifndef GLOBAL_DEFINES
+#define GLOBAL_DEFINES
+#include "carlCook.h"
+
 #define CUSTOMERS 6
 #define COOKS 5
 #define ORDERTAKERS 1
@@ -8,8 +13,6 @@
 #define VEGGIE_BURGER 2
 #define FRIES 3
 #define SODA 4
-
-
 // No of customers
 extern int numberOfcustomer;
 extern int numberOfOrderTakers;
@@ -19,15 +22,23 @@ extern int orderTakerNumber;
 //shared lists
 
 
-
+//globals
 extern int queuedFood[5];
 extern int storedFood[5];
 extern int cookedFood[5];
+extern int numberOfCooks;
+extern char* foodStrings[];
 extern Lock lockQueuedFood;
 extern Lock lockCookedFood;
-extern Lock lockFoodStored;
+extern Lock lockStoredFood;
+
+extern Condition cvCookBreak;
+extern Lock lockCookBreak;
+extern bool orderedFood;
+extern carlCook* mCooks[];
  
 
+extern void orderFoodThread();
 
 extern bool orderTakerReadyState[ORDERTAKERS];   /// Can be added as define in global define
 
@@ -84,3 +95,4 @@ extern bool customerState[30];   // Can be taken from global defines later on
 
 extern bool foodNotReady;
 extern int foodAvailable; 
+#endif
