@@ -10,6 +10,12 @@
 #define SODA 4
 
 
+// No of customers
+extern int numberOfcustomer;
+extern int numberOfOrderTakers;
+
+extern int customerNumber;
+extern int orderTakerNumber;
 //shared lists
 
 
@@ -29,27 +35,52 @@ extern bool orderTakerReadyState[ORDERTAKERS];   /// Can be added as define in g
 // Lock to implement seperate lines
 extern Lock *lockNewCustomerLine[];
 
+// Lock for Customer to order
+extern Lock * lockCustomerOrder[];
+
+// Lock for Customer to Serve
+extern Lock * lockCustomerServe[];
+
+// Lock for Customer to show that food is bagged
+extern Lock * lockCustomerOrderBagged[];
+
+// Condition variable to signal customer that order taker is ready
+extern Condition *cvOrderTakerReady[];
+
 // Condition variables to tell customer that order taker is ready 
-//extern Condition *cvOrderTakerReadyStat[];
+extern Condition *cvCustomerOrdered[];
 
-// Lock to implement seperate lines
-extern Lock *lockInventoryCheck[];
+// Condition variable for order Ready 
+extern Condition *cvOrderReady[];
 
-// Lock to implement seperate lines
-//extern Lock *lockFoodBagging[];
+// Condition variable for order Ready 
+extern Condition *cvOrderPicked[];
 
-// Condition variables to tell customer that order taker is ready 
-extern Condition *cvOrderTakerReadyStat[];
+// Line lenghth variable
+extern int lineLength;
+
+// Line length of all lines served by ordertaker
+extern int orderTakerLineLength[];
+
+// Variable which keeps track of given order
+extern bool orderGiven;
+extern bool foodPicked;
+extern bool orderReady;
+
+// Define an array of structures to save customer related info
+
+
+
+
 
 // Condition variables to tell customer that order taker is ready 
 extern Condition *cvFoodNotReady[];
-
+//******************************* SCOTTS CODE*******************
 extern Condition *cvInventoryFill[];
 extern int orderTakerStatus;
 extern bool customerState[30];   // Can be taken from global defines later on
 
-// Line lenghth variable
-extern int lineLength;
+
 
 extern bool foodNotReady;
 extern int foodAvailable; 

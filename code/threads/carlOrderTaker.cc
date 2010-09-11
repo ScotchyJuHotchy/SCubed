@@ -22,78 +22,121 @@ carlOrderTaker::~carlOrderTaker()
 }
 
 // Function to Acquire lock for every created customer thread
-void carlOrderTaker::carlOrderTakerLockAcquire(int orderTakerNumber)
+void carlOrderTaker::carlOrderTakerLockAcquire()
 {
 	// Acquiring lock
-	//lockNewCustomerLine[orderTakerNumber]->Acquire();
+	lockNewCustomerLine[orderTakerNumber]->Acquire();
 
 	// Customer has joined a line & waiting for a order taker to signal
 	// Change customer state to wait_order
 	//orderTakerReadyState[orderTakerNumber] = false;
 
-	orderTakerReady(orderTakerNumber);
+	orderTakerReady();
 }
 
 // Customer to be signalled for order
-void carlOrderTaker::orderTakerReady(int orderTakerNumber)
+void carlOrderTaker::orderTakerReady()
 {
 	//printf("Line Length : %d \n", lineLength);
-	while (locallineLength > 0)
+	while (orderTakerLineLength[orderTakerNumber] > 0)
 	{
-		lockNewCustomerLine[orderTakerNumber]->Acquire();
-		// Check whether customer belongs to 
+		printf("Line Length : %d\n", orderTakerLineLength[orderTakerNumber]);
+		// Make the status of order taker Ready
 		orderTakerReadyState[orderTakerNumber] = true;
 
-		//printf("Order Taker %d is ready\n", orderTakerNumber);
-
 		// Signal the customer
-		cvOrderTakerReadyStat[orderTakerNumber]->Signal(lockNewCustomerLine[orderTakerNumber]);
-		printf("Order Taker has signalled to move either in next queue or out\n", orderTakerNumber);
-		
+		cvOrderTakerReady[orderTakerNumber]->Signal(lockNewCustomerLine[orderTakerNumber]);
+		printf("Order Taker has signalled to come & give order : OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+
+		// Acquire the customer order lock
+		lockCustomerOrder[customerNumber]->Acquire();
+
+		// Release the customer line lock
 		lockNewCustomerLine[orderTakerNumber]->Release();
 
-		// Release your lock & acquire inventory lock
-		lockInventoryCheck[orderTakerNumber]->Acquire();
-
-		//printf(" OrderTaker : Food was not Available : %d\n", foodAvailable);
-		// Query the inventory for available food item
-		if (foodAvailable <= 0)
+		// Make customer order ready
+		if (!orderGiven)
 		{
-			foodNotReady = true;
-			printf(" waiting : As Food was not Available : %d\n", foodAvailable);
-			// Wait for the food item to get ready
-			cvInventoryFill[orderTakerNumber]->Wait(lockInventoryCheck[orderTakerNumber]);
-			printf("Served Customer After Waiting: %d\n", locallineLength);
+			// wait for the customer to give order
+			printf("Waiting for customer order: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+			cvCustomerOrdered[customerNumber]->Wait(lockCustomerOrder[customerNumber]);
 
-		} else
-		{
-			printf("Served Customer : %d\n", locallineLength);
-			foodNotReady = false;
-			--foodAvailable;
+			// Make the value of ordergiven as false
+			orderGiven = false;
 		}
 
+		// Acquire customer serve lock
+		lockCustomerServe[customerNumber]->Acquire();
+
+		// Release customer order lock
+		lockCustomerOrder[customerNumber]->Release();
+
+		// Query the inventory for available food item
+		//if (foodAvailable <= 0)
+		//{
+			//orderReady = false;
+			
+			//cvInventoryFill[orderTakerNumber]->Wait(lockInventoryCheck[orderTakerNumber]);
+			//printf("Served Customer After Waiting: %d\n", locallineLength);
+
+		//} else
+		//{
+			// Food is ready
+			orderReady = true;
+
+			// Signal customer to pick food
+			cvOrderReady[customerNumber]->Signal(lockCustomerServe[customerNumber]);
+			printf("Customer is signalled for order ready.: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+
+			// Acquire customer serve lock
+			lockCustomerOrderBagged[customerNumber]->Acquire();
+
+			// Release customer order lock
+			lockCustomerServe[customerNumber]->Release();
+
+			// Wait to customer to pick food
+			if (!foodPicked)
+			{
+				// Wait for customer to signal food picked
+				printf("Waiting for customer to pick order: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+				cvOrderPicked[customerNumber]->Wait(lockCustomerOrderBagged[customerNumber]);
+				
+				// Make food picked false
+				foodPicked = false;
+			}
+
+			
+			lockNewCustomerLine[orderTakerNumber]->Acquire();
+
+			lockCustomerOrderBagged[customerNumber]->Release();
+
+
+			//foodNotReady = false;
+			//--foodAvailable;
+		//}
+
 		// release the inventory lock
-		lockInventoryCheck[orderTakerNumber]->Release();
+		//lockInventoryCheck[orderTakerNumber]->Release();
 		//printf("OrderTaker release lock\n");
 
 
-		if (foodNotReady)
-		{
-			lockNewCustomerLine[orderTakerNumber]->Acquire();
+		//if (foodNotReady)
+		//{
+			//lockNewCustomerLine[orderTakerNumber]->Acquire();
 			// Signal the customer
-			cvFoodNotReady[orderTakerNumber]->Signal(lockNewCustomerLine[orderTakerNumber]);
-			printf("Order Taker has signalled that food is now ready\n", orderTakerNumber);
-			lockNewCustomerLine[orderTakerNumber]->Release();
+			//cvFoodNotReady[orderTakerNumber]->Signal(lockNewCustomerLine[orderTakerNumber]);
+			//printf("Order Taker has signalled that food is now ready\n", orderTakerNumber);
+			//lockNewCustomerLine[orderTakerNumber]->Release();
 			//printf("OrderTaker release lock in notFoodAvailable\n");
 
-		} 
+		//} 
 
 
 		//printf("Order Taker has signalled\n", orderTakerNumber);
 
 		// Debug message
-		DEBUG('u', "Order Taker is Ready to take order\n");
-		--locallineLength;
+		DEBUG('u', "Order Taker is Ready to take order: OrderNo.-%d : Customer-%d \n", orderTakerNumber, customerNumber);
+		//--locallineLength;
 
 	}
 	

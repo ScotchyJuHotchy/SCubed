@@ -7,19 +7,47 @@
 #include "carlManager.h"
 #include "globalDefines.h"
 #include "stdlib.h"
+#include "iostream.h"
+using namespace std;
 
-// Lock & Condition variable for ordertakers to deal with customers in Line
-Lock *lockNewCustomerLine[ORDERTAKERS];
-Lock *lockInventoryCheck[ORDERTAKERS];
-//Lock *lockFoodBagging[ORDERTAKERS];
-Condition *cvOrderTakerReadyStat[ORDERTAKERS];
+// Lock to implement seperate lines
+Lock *lockNewCustomerLine[50];
+
+// Lock for Customer to order
+Lock *lockCustomerOrder[50];
+
+// Lock for Customer to Serve
+Lock *lockCustomerServe[50];
+
+// Lock for Customer to show that food is bagged
+Lock *lockCustomerOrderBagged[50];
+
+// Condition variable to signal customer that order taker is ready
+Condition *cvOrderTakerReady[50];
+
+// Condition variables to tell customer that order taker is ready 
+Condition *cvCustomerOrdered[50];
+
+// Condition variable for order Ready 
+Condition *cvOrderReady[50];
+
+// Condition variable for order Ready 
+Condition *cvOrderPicked[50];
+
+// Line length of all lines served by ordertaker
+int orderTakerLineLength[100];
 
 // Condition variable for food not ready
-Condition *cvFoodNotReady[ORDERTAKERS];
-Condition *cvInventoryFill[ORDERTAKERS];
+Condition *cvFoodNotReady[50];
+Condition *cvInventoryFill[50];
 
 carlCustomer *customer=new carlCustomer("customer");
 carlOrderTaker *orderTaker=new carlOrderTaker("orderTaker");
+
+int customerNumber = 0;
+int orderTakerNumber = 0;
+int numberOfcustomer = 0;
+int numberOfOrderTakers = 0;
 
 //shared lists
 int queuedFood[5];
@@ -40,14 +68,17 @@ carlCook* mCooks[10];
 int cookNumber = 0; //used to give cooks their number
 
 
-// Variable to keep track of line length
-int lineLength;
+// Line lenghth variable
+int lineLength = 0;
 
-bool foodNotReady = false;
-int foodAvailable  = 3;
+// Variable which keeps track of given order
+bool orderGiven = false;
+bool foodPicked = false;
+bool orderReady = false;
+
 
 // Function declaration for new customer
-void createCustomer (int customerNumber);
+void createCustomer (int newCustomerNumber);
 void createCook(int cookNumber);
 
 // Function to create order taker locks
@@ -57,7 +88,12 @@ void createOrderTakerLocks ();
 void createOrderTakerCV();
 
 // Function to create order taker
-void createOrderTaker (int orderTakerNumber);
+void createOrderTaker (int newOrderTaker);
+
+// Function to initialize array
+void arrayInitialize();
+
+int lineDecision (int lineLengthMin[100], int lineNumber);
 
 
 //Thread fo cooks
@@ -67,6 +103,12 @@ void carlManagerThread();
 // Main function which will take care of all objects & threads
 void carlsJuniorSim ()
 {
+	printf("Please enter number of customer :");
+	cin >> numberOfcustomer;
+
+	printf("Please enter number of OrderTakers :");
+	cin >> numberOfOrderTakers;
+
 	// Character pointers used for unique names
 	char *name;
 	for(int i = 0; i < 5;i++)
@@ -83,20 +125,23 @@ void carlsJuniorSim ()
 	
 	DEBUG('u', "Creating new costomer\n");
 
+	// Initialize all arrays
+	arrayInitialize();
+
 	// Creating customers
-	for (int i=0; i<CUSTOMERS; i++)
+	for (int i=0; i<numberOfcustomer; i++)
 	{
 		//customer->newCustomer(i);
 		name = new char[25];
 		sprintf(name,"newCustomer_%d",i);
 		Thread *newCustomerThread = new Thread(name);
-		++(lineLength);
+		//++(lineLength);
 		newCustomerThread->Fork((VoidFunctionPtr)createCustomer, i);
 
 	}
 
 	// Creating order takers
-	for (int j=0; j<ORDERTAKERS; j++)
+	for (int j=0; j<numberOfOrderTakers; j++)
 	{
 		//lineLength[j] = 0;
 		//customer->newCustomer(i);
@@ -108,8 +153,8 @@ void carlsJuniorSim ()
 
 	}
 	
-	//Create some cooks	
-	for(int i=0;i<COOKS;i++)
+	//***************8 Commenting Scotts Code//Create some cooks	
+	/*for(int i=0;i<COOKS;i++)
 	{
 			name = new char[25];
 			sprintf(name,"Cook_%d",i);
@@ -267,7 +312,7 @@ void carlManagerThread()
 	
 	//prints results.	
 	printStoredFood();
-	printCookedFood();
+	printCookedFood();*/
 		
 		
 
@@ -352,15 +397,26 @@ void carlCookThread()
 
 
 // Function to be called for creating new customers
-void createCustomer (int customerNumber)
+void createCustomer (int newCustomerNumber)
 {
+	// Take the customer no. in global variable
+	customerNumber = newCustomerNumber;
+
+	// Find out which line customer is gonna join
+	int lineNumber = lineDecision(orderTakerLineLength, numberOfOrderTakers);
+
+	orderTakerNumber = lineNumber;
+
+	printf(" Customer number : %d\n", customerNumber);
+	printf(" Customer line number : %d\n", orderTakerNumber);
+
 	DEBUG('u', "CustomerLockAcquire called\n");
-	customer->customerLockAcquire(customerNumber/6);
+	customer->customerLockAcquire();
 
 	// Keep track of no. of customer adding in line
 	//++(lineLength);
 
-	printf("length in main %d\n", lineLength);
+	//printf("length in main %d\n", lineLength);
 }
 
 // Function to be called for creating Locks for simulating lines in front of order takers
@@ -368,16 +424,15 @@ void createOrderTakerLocks ()
 {
 	char *name;
 
-	for (int j=0;j<ORDERTAKERS ;j++ )
+	for (int j=0;j<numberOfOrderTakers ;j++ )
 	{
 		DEBUG('u', "Creating new lock for ordertaker : %d\n",j);
 		name = new char[25];
-		sprintf(name,"ordertaker_%d",j);
+		sprintf(name,"ordertakerLock_%d",j);
 		lockNewCustomerLine[j]= new Lock(name);
-
-		// Creating food bagging locks
-		sprintf(name,"lockInventory_%d",j);
-		lockInventoryCheck[j]= new Lock(name);
+		
+		sprintf(name,"ordertakerCV_%d",j);
+		cvOrderTakerReady[j] = new Condition(name);
 	}
 }
 
@@ -386,29 +441,43 @@ void createOrderTakerCV ()
 {
 	char *name;
 
-	for (int j=0;j<ORDERTAKERS ;j++ )
+	for (int j=0;j<numberOfcustomer ;j++ )
 	{
 		DEBUG('u', "Creating new Condition Variables for ordertaker : %d\n",j);
 		name = new char[25];
-		sprintf(name,"ordertakerCV_%d",j);
-		cvOrderTakerReadyStat[j]= new Condition(name);
+	
+		sprintf(name,"customerOrderLock_%d",j);
+		lockCustomerOrder[j]= new Lock(name);
+
+		sprintf(name,"customerServeLock_%d",j);
+		lockCustomerServe[j]= new Lock(name);
+
+		sprintf(name,"customerOrderBaggedLock_%d",j);
+		lockCustomerOrderBagged[j]= new Lock(name);
 
 		// Initialization of food not ready CV
-		sprintf(name,"foodNotReadyCV_%d",j);
-		cvFoodNotReady[j]= new Condition(name);
+		sprintf(name,"customerOrderedCV_%d",j);
+		cvCustomerOrdered[j]= new Condition(name);
 		
 		// Initialization of food not ready CV
-		sprintf(name,"foodNotReadyCV_%d",j);
-		cvInventoryFill[j]= new Condition(name);
+		sprintf(name,"orderReadyCV_%d",j);
+		cvOrderReady[j]= new Condition(name);
+
+		// Initialization of food not ready CV
+		sprintf(name,"orderPickedCV_%d",j);
+		cvOrderPicked[j]= new Condition(name);
 		
 	}
 }
 
 // Function to be called for creating OrderTaker
-void createOrderTaker (int orderTakerNumber)
+void createOrderTaker (int newOrderTaker)
 {
+	// Take orderTaker no. in a globle variable
+	//orderTakerNumber = newOrderTaker;
+
 	DEBUG('u', "OrderTakerLockAcquire called\n");
-	orderTaker->carlOrderTakerLockAcquire(orderTakerNumber);
+	orderTaker->carlOrderTakerLockAcquire();
 	//lockNewCustomerLine[0]->Acquire();
 	//while (lineLength[1] > 0)
 	//{
@@ -416,3 +485,32 @@ void createOrderTaker (int orderTakerNumber)
 	//}
 }
 
+// Function to decide customer will use which line
+int lineDecision (int lineLengthMin[], int lineNumber)
+{
+	// set maximum index to zero
+	int indexMin = 0;
+
+	// Assert if linelength array size is not greater than 0
+	assert(lineNumber >0);
+
+	for (int i=1; i<lineNumber; i++)
+	{
+       if (lineLengthMin[i] < lineLengthMin[indexMin])
+		{
+           indexMin = i;
+		}
+	}
+
+	// Return the line length
+	return indexMin;
+}
+
+// Function to initialize all array
+void arrayInitialize ()
+{
+	for (int i=0; i<numberOfOrderTakers; i++)
+	{
+		orderTakerLineLength[i] = 0;
+	}
+}
