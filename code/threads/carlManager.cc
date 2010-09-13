@@ -43,8 +43,13 @@ void carlManager::checkFood()
 			{
 				orderedFood = true;
 				//Check money
-				//if 
-				
+				if(cash < 100)
+				{
+					printf("Manager goes to bank to withdraw the cash\n");
+					currentThread->Yield();
+					currentThread->Yield();
+					cash += 100;
+				}
 				
 				//****Implement!****
 
@@ -55,6 +60,7 @@ void carlManager::checkFood()
 				Thread *newOrderThread = new Thread(threadName);
 				newOrderThread->Fork((VoidFunctionPtr)orderFoodThread, 0);
 				lockStoredFood.Release();
+				cash -= 100;
 				return;
 			}
 		}	

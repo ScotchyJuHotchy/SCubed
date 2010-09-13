@@ -46,10 +46,6 @@ THREAD_H =../threads/copyright.h\
 	../threads/thread.h\
 	../threads/utility.h\
 	../threads/globalDefines.h\
-	../threads/carlCustomer.h\
-	../threads/carlCook.h\
-	../threads/carlManager.h\
-	../threads/carlOrderTaker.h\
 	../machine/interrupt.h\
 	../machine/sysdep.h\
 	../machine/stats.h\
@@ -64,12 +60,8 @@ THREAD_C =../threads/main.cc\
 	../threads/thread.cc\
 	../threads/utility.cc\
 	../threads/threadtest.cc\
-	../threads/carlCustomer.cc\
-	../threads/carlSimulation.cc\
-	../threads/carlCook.cc\
-	../threads/carlManager.cc\
-	../threads/carlOrderTaker.cc\
 	../threads/test_code.cc\
+	../threads/carlsJuniorSimulation.cc\
 	../machine/interrupt.cc\
 	../machine/sysdep.cc\
 	../machine/stats.cc\
@@ -78,8 +70,8 @@ THREAD_C =../threads/main.cc\
 THREAD_S = ../threads/switch.s
 
 THREAD_O =main.o list.o scheduler.o synch.o synchlist.o system.o thread.o \
-	utility.o threadtest.o carlCustomer.o carlSimulation.o carlOrderTaker.o \
-	test_code.o interrupt.o stats.o sysdep.o timer.o carlManager.o  carlCook.o 
+	utility.o threadtest.o  carlsJuniorSimulation.o  \
+	test_code.o interrupt.o stats.o sysdep.o timer.o 
 
 USERPROG_H = ../userprog/addrspace.h\
 	../userprog/bitmap.h\

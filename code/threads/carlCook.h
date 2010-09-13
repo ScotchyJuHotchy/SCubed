@@ -6,6 +6,7 @@
 #include "switch.h"
 #include "synch.h"
 #include "list.h"
+#include "stdlib.h"
 #include "globalDefines.h"
 
 #ifndef CARLCOOK_H
@@ -21,7 +22,8 @@ public:
 	void goBreak();
 	char* getName()
 		{return name;}
-	void goWork(int newFood);	
+	void goWork(int newFood);
+	void cookFood();	
 	
 private:
 	char* name;
