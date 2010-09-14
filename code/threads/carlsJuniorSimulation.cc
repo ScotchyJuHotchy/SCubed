@@ -629,6 +629,9 @@ void carlOrderTaker(int orderTakernumber)
 	// This thread should run continously
 	while (true)
 	{
+		
+		//checks if the manager wants to know how much cash the restaurant has. 
+		//Lock assures only one ordertaker helps him.
 		cashLock.Acquire();
 		if(askForCash == true)
 		{
