@@ -28,6 +28,9 @@ Lock lockQueuedFood("queuedFood");
 Lock lockCookedFood("cookedFood");
 Lock lockStoredFood("storedFood");
 int cash = 0;
+int managerCash = 0;
+bool askForCash = false;
+Lock cashLock("cashLock");
 //Condition cvCookBreak("cookBreak");
 //Lock lockCookBreak("lockCookBreak");
 

@@ -384,6 +384,7 @@ void carlCustomer (int customerNumber)
 {
 	// Create a local variable for saving the orderTaker's number associated with customer
 	int myOrderTaker = -1;
+	int tempcash = 0;
 
 	// Set the customer ID in customer data
 	// This ID will be used as customer number in future or can be used as Token also
@@ -473,6 +474,7 @@ void carlCustomer (int customerNumber)
 	if (customerData[customerNumber].dollar6Burger)
 	{
 		cout <<"Customer ["<<customerNumber<<"] is ordering 6-dollar burger"<<endl;
+		tempcash += 2;
 	} else
 	{
 		cout <<"Customer ["<<customerNumber<<"] is [not] ordering 6-dollar burger"<<endl;
@@ -481,6 +483,7 @@ void carlCustomer (int customerNumber)
 	if (customerData[customerNumber].dollar3Burger)
 	{
 		cout <<"Customer ["<<customerNumber<<"] is ordering 3-dollar burger"<<endl;
+		tempcash += 2;
 	} else
 	{
 		cout <<"Customer ["<<customerNumber<<"] is [not] ordering 3-dollar burger"<<endl;
@@ -489,6 +492,7 @@ void carlCustomer (int customerNumber)
 	if (customerData[customerNumber].veggieBurger)
 	{
 		cout <<"Customer ["<<customerNumber<<"] is ordering veggie burger"<<endl;
+		tempcash += 2;
 	} else
 	{
 		cout <<"Customer ["<<customerNumber<<"] is [not] ordering veggie burger"<<endl;
@@ -497,6 +501,7 @@ void carlCustomer (int customerNumber)
 	if (customerData[customerNumber].frenchFries)
 	{
 		cout <<"Customer ["<<customerNumber<<"] is ordering french fries"<<endl;
+		tempcash += 2;
 	} else
 	{
 		cout <<"Customer ["<<customerNumber<<"] is [not] ordering french fries"<<endl;
@@ -505,6 +510,7 @@ void carlCustomer (int customerNumber)
 	if (customerData[customerNumber].soda)
 	{
 		cout <<"Customer ["<<customerNumber<<"] is ordering soda"<<endl;
+		tempcash += 1;
 	} else
 	{
 		cout <<"Customer ["<<customerNumber<<"] is [not] ordering soda"<<endl;
@@ -512,6 +518,16 @@ void carlCustomer (int customerNumber)
 
 	// Tell ordertaker that customer has given order
 	cvOrderTakerServe[myOrderTaker]->Signal(lockOrderTakerServe[myOrderTaker]);
+	
+//Scott added this cash interaction. It works because when a thread leaves wait and signal it still holds the lock
+	
+    //wait for cashier to say he is ready to take money
+	cvOrderTakerServe[myOrderTaker]->Wait(lockOrderTakerServe[myOrderTaker]);	
+	//pay money
+	cash += tempcash;
+	//tell cashier you paid
+	cvOrderTakerServe[myOrderTaker]->Signal(lockOrderTakerServe[myOrderTaker]);
+
 
 	// Customer will choose here that whether he wants to eat-in or go
 	if (customerData[customerNumber].eatIn)   // Customer has decided to eat-in
@@ -613,6 +629,15 @@ void carlOrderTaker(int orderTakernumber)
 	// This thread should run continously
 	while (true)
 	{
+		cashLock.Acquire();
+		if(askForCash == true)
+		{
+			managerCash = cash;
+			askForCash = false;
+		}
+		cashLock.Release();
+		
+		
 		// Acquire the line lock to talk to the customer
 		lockCustomerLine->Acquire();
 
@@ -680,6 +705,14 @@ void carlOrderTaker(int orderTakernumber)
 
 		//Waiting for the customer to give order
 		cvOrderTakerServe[orderTakernumber]->Wait(lockOrderTakerServe[orderTakernumber]);
+		
+		
+		//tell Customer to pay
+		cvOrderTakerServe[orderTakernumber]->Signal(lockOrderTakerServe[orderTakernumber]);
+		
+		//wait for payment
+		cvOrderTakerServe[orderTakernumber]->Wait(lockOrderTakerServe[orderTakernumber]);
+		
 
 		// Acquire the Inventory lock, & then release the service lock
 		// inventoryLock->Acquire;
@@ -961,7 +994,8 @@ void carlManager (int manager)
 		// Release the lock acquired for Customer Line watching
 		//lockCustomerLine->Release();
 		
-		
+		//In order for this to work, an ordertaker has to be available. In the beginning of their while loop
+		//they check to see if the manager is requesting the cash amount. This is from one of the class emails.
 		checkFood();
 	}
 }
@@ -1053,20 +1087,26 @@ void checkFood()
 	//Checks if food is already ordered if its not then check quantities. If something is under 5, order 15 to all.
 	lockStoredFood.Acquire();
 	char* threadName;
+	
 	if(!orderedFood)
 	{
 		for(int i = 0; i < 5;i++)
 		{
 			if(storedFood[i] < 5)
 			{
+				
 				orderedFood = true;
+				askForCash = true;
 				//Check money
-				if(cash < 100)
+				while(askForCash)
+					currentThread->Yield();
+					
+				if(managerCash < 100)
 				{
 					printf("Manager goes to bank to withdraw the cash\n");
 					currentThread->Yield();
 					currentThread->Yield();
-					cash += 100;
+					managerCash += 100;
 				}
 				
 				//****Implement!****
@@ -1078,7 +1118,8 @@ void checkFood()
 				Thread *newOrderThread = new Thread(threadName);
 				newOrderThread->Fork((VoidFunctionPtr)orderFoodThread, 0);
 				lockStoredFood.Release();
-				cash -= 100;
+				managerCash -= 100;
+				cash = managerCash;
 				return;
 			}
 		}	
